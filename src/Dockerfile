@@ -1,8 +1,10 @@
-# src/Dockerfile
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
-COPY . .
-RUN pip install requests
 
-CMD ["python", "main.py"]
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY main.py .
+
+CMD ["python", "-u", "main.py"]
