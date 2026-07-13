@@ -1,62 +1,38 @@
-version: '3.8'
-
-# ---------------------------------------------------------------------------
-# Networks
-# ---------------------------------------------------------------------------
-networks:
-  # Internal network: orchestrator ↔ dns-server (never exposed)
-  internal:
-    driver: bridge
-  # External proxy network managed by sk-ld/docker-compose.prod.yml
-  proxy:
-    external: true
-    name: sk-ld_proxy
-
-# ---------------------------------------------------------------------------
-# Volumes
-# ---------------------------------------------------------------------------
-# (npm volumes removed – NPM is not used)
-
 services:
 
-  # ---------------------------------------------------------------------------
-  # DNS Layer – AdGuard Home
-  # ---------------------------------------------------------------------------
+  # ── DNS Layer – AdGuard Home ──────────────────────────────────────────
   dns-server:
     image: adguard/adguardhome:latest
     container_name: adguard-home
     restart: unless-stopped
     ports:
-      - "53:53/udp"   # DNS – must remain public
-      - "53:53/tcp"   # DNS – must remain public
-      # Port 3000 is intentionally NOT exposed to the host.
-      # The web UI is only reachable through nginx-proxy.
-    environment:
-      # nginx-proxy picks these up automatically via Docker socket
-      - VIRTUAL_HOST=vps.spacekeep.dev
-      - VIRTUAL_PORT=80
-      - LETSENCRYPT_HOST=vps.spacekeep.dev
+      - "53:53/udp"
+      - "53:53/tcp"
+      - "8080:80"      # AdGuard web dashboard
+      - "3000:3000"    # AdGuard initial setup wizard
     volumes:
-      - /home/j/adguard_data/work:/opt/adguardhome/work
-      - /home/j/adguard_data/conf:/opt/adguardhome/conf
+      - adguard-work:/opt/adguardhome/work
+      - adguard-conf:/opt/adguardhome/conf
     networks:
       - internal
-      - proxy   # needed so nginx-proxy can forward traffic to port 3000
 
-  # ---------------------------------------------------------------------------
-  # Control Layer – Traffic Orchestrator
-  # ---------------------------------------------------------------------------
+  # ── Control Layer – Xbox Orchestrator ─────────────────────────────────
   orchestrator:
     build: ./src
     container_name: traffic-orchestrator
     restart: unless-stopped
-    environment:
-      - ADGUARD_URL=http://dns-server:80
-      - ADGUARD_USER=xbox
-      - ADGUARD_PASS=senseiwu
-      - POLL_INTERVAL=30
-      - XBOX_CLIENT_IP=2.215.119.187
+    env_file: .env
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
     networks:
-      - internal   # only needs internal access, never exposed
+      - internal
     depends_on:
       - dns-server
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  adguard-work:
+  adguard-conf:

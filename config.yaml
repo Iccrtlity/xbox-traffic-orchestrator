@@ -1,0 +1,46 @@
+# ===========================================================================
+# Xbox Screen-Time Orchestrator – Configuration
+# ===========================================================================
+# Sensitive fields (adguard_user, adguard_pass) are overridden by .env
+# when running inside Docker. Edit this file for non-sensitive settings.
+# ===========================================================================
+
+# AdGuard Home connection
+adguard_url: "http://dns-server:80"
+adguard_user: "admin"
+adguard_pass: ""
+
+# Xbox domains monitored in the DNS query log.
+# Activity on any of these triggers the blocking mechanism.
+xbox_domain:
+  - "device.auth.xboxlive.com"
+  - "title.auth.xboxlive.com"
+  - "xsts.auth.xboxlive.com"
+  - "def.auth.xboxlive.com"
+  - "title.mgt.xboxlive.com"
+  - "family.microsoft.com"
+  - "familysafety.microsoft.com"
+  - "presence.xboxlive.com"
+  - "userpresence.xboxlive.com"
+  - "activity.windows.com"
+  - "edge.activity.windows.com"
+  - "settings-win.data.microsoft.com"
+  - "v10.events.data.microsoft.com"
+  - "v20.events.data.microsoft.com"
+
+# Time in seconds to briefly UNBLOCK Xbox domains after activity detection.
+# The orchestrator detects Xbox access attempts in the DNS query log,
+# waits this many seconds, then opens a short window before re-blocking.
+# This makes the Xbox think it connected, then drops the session.
+bypass_duration: 4
+
+# How often to poll the AdGuard query log (seconds).
+# Should be low enough to catch Xbox access attempts quickly.
+poll_interval: 5
+
+# Optional: restrict monitoring to a specific Xbox client IP address.
+# Leave empty to monitor all clients.
+xbox_client_ip: ""
+
+# Seconds to wait for AdGuard Home to become ready at startup.
+startup_timeout: 120
