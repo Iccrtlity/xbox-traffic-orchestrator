@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # DNS Layer
+  dns-server:
+    image: adguard/adguardhome:latest
+    container_name: adguard-home
+    restart: unless-stopped
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+      - "3000:3000/tcp" # Web-Interface Port
+    volumes:
+      - ./config/adguard/work:/opt/adguardhome/work
+      - ./config/adguard/conf:/opt/adguardhome/conf
+
+  # Control Layer
+  orchestrator:
+    build: ./src
+    container_name: traffic-orchestrator
+    restart: unless-stopped
+    depends_on:
+      - dns-server
+    environment:
+      - ADGUARD_HOST=http://dns-server:3000
+      - TARGET_DOMAIN=xsts.auth.xboxlive.com
